@@ -70,3 +70,5 @@ A Flask web application that analyzes recent Reddit discussions for a given stoc
 5.  View the sentiment analysis results, trend plot, and top relevant posts.
 
 ## Project Structure
+
+stock/ ├── .env # Stores API keys (ignored by git) ├── .gitignore # Specifies intentionally untracked files ├── README.md # This file ├── requirements.txt # Project dependencies ├── stock_sentiment.py # Original CLI script (not used by web app) └── src/ # Main application source code ├── app.py # Flask application entry point and routes ├── models/ # Contains the EnhancedSentimentAnalyzer logic │ └── sentiment_analyzer.py ├── static/ # Stores generated plot images ├── templates/ # HTML templates for the web UI │ └── index.html └── visualization/ # Plotting logic └── plotter.py
