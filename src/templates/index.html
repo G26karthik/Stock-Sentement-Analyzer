@@ -1,0 +1,321 @@
+<!-- src/templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Stock Sentiment Analyzer</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --primary-color: #007bff;
+            --primary-hover: #0056b3;
+            --card-bg: #2c2c2c;
+            --border-color: #444;
+            --error-color: #dc3545;
+            --success-color: #28a745;
+            --neutral-color: #ffc107;
+            --link-color: #61dafb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px; /* Increased max-width */
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-container {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            display: flex; /* Use flexbox for alignment */
+            gap: 15px; /* Space between items */
+            align-items: center; /* Vertically align items */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+
+        #stockSymbol {
+            flex-grow: 1; /* Allow input to take available space */
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #333;
+            color: var(--text-color);
+            font-size: 1rem;
+            min-width: 150px; /* Minimum width */
+        }
+
+        #stockSymbol:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        button[type="submit"] {
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: var(--primary-hover);
+        }
+
+        #results {
+            margin-top: 30px;
+            width: 100%;
+        }
+
+        .analysis-results {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .analysis-results h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+         .analysis-results h4 {
+            margin-top: 25px;
+            margin-bottom: 15px;
+            color: var(--text-color);
+         }
+
+        .sentiment-summary {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #333; /* Slightly different background */
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
+        }
+        .sentiment-summary p { margin: 8px 0; }
+        .sentiment-summary ul { padding-left: 20px; margin-top: 5px; }
+        .sentiment-summary li { margin-bottom: 4px; }
+
+
+        .error { color: var(--error-color); font-weight: bold; }
+        .loading { color: #aaa; font-style: italic; text-align: center; padding: 20px; }
+
+        .plot-container {
+            margin-top: 30px;
+            text-align: center; /* Center the plot */
+        }
+        .plot-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            background-color: #fff; /* White background for the plot image itself */
+            padding: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .post {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #333;
+            transition: border-left-color 0.3s ease;
+        }
+        .post.positive { border-left: 5px solid var(--success-color); }
+        .post.negative { border-left: 5px solid var(--error-color); }
+        .post.neutral { border-left: 5px solid var(--neutral-color); }
+
+        .post-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        .post-title a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+        .post-title a:hover { text-decoration: underline; }
+
+        .post-meta {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .post-text {
+            margin-top: 15px;
+            white-space: pre-wrap; /* Keep line breaks */
+            font-size: 0.95rem;
+            color: #ccc;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .form-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            button[type="submit"] {
+                width: 100%;
+            }
+            body { padding: 10px; }
+            .analysis-results, .form-container { padding: 15px; }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reddit Stock Sentiment Analyzer</h1>
+
+        <div class="form-container">
+            <form id="stockForm" style="display: contents;"> <!-- Use display: contents to integrate form elements into flexbox -->
+                <input type="text" id="stockSymbol" name="stock_symbol" placeholder="Enter stock symbol (e.g., AAPL)" required>
+                <!-- Country dropdown removed -->
+                <button type="submit">Analyze</button>
+            </form>
+        </div>
+
+        <div id="results">
+            <!-- Analysis results will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('stockForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const stockSymbol = document.getElementById('stockSymbol').value.trim().toUpperCase();
+            // Removed country fetching
+            const resultsDiv = document.getElementById('results');
+
+            if (!stockSymbol) {
+                resultsDiv.innerHTML = '<div class="error">Please enter a stock symbol.</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">Analyzing Reddit sentiment... Please wait (this may take a minute).</div>';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    // Removed country parameter from body
+                    body: `stock_symbol=${stockSymbol}`
+                });
+
+                if (!response.ok) {
+                    let errorMsg = `HTTP error! status: ${response.status} ${response.statusText}`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData && errorData.error) {
+                            errorMsg = `Error: ${errorData.error}`;
+                        }
+                    } catch (jsonError) {
+                        console.error("Could not parse error response as JSON:", jsonError);
+                    }
+                    resultsDiv.innerHTML = `<div class="error">${errorMsg}</div>`;
+                    return;
+                }
+
+                const data = await response.json();
+
+                // --- Display Logic ---
+                let html = '<div class="analysis-results">';
+                html += `<h2>Analysis Results for ${data.stock_symbol}</h2>`; // Removed country
+
+                // Display Sentiment Analysis
+                if (data.sentiment && data.sentiment.success) {
+                    html += '<div class="sentiment-summary">';
+                    html += '<h4>Reddit Sentiment Analysis</h4>';
+                    html += `<p>Average Sentiment (High Quality Posts): ${(data.sentiment.average_sentiment * 100).toFixed(1)}%</p>`;
+                    html += `<p>High Quality Posts Analyzed: ${data.sentiment.post_count}</p>`;
+
+                    if (data.sentiment.sentiment_distribution) {
+                        html += '<p>Sentiment Distribution:</p><ul>';
+                        const distribution = data.sentiment.sentiment_distribution;
+                        html += `<li>Positive (> 0.05): ${distribution.positive || 0}</li>`;
+                        html += `<li>Neutral (-0.05 to 0.05): ${distribution.neutral || 0}</li>`;
+                        html += `<li>Negative (< -0.05): ${distribution.negative || 0}</li>`;
+                        html += '</ul>';
+                    }
+                    html += '</div>'; // end sentiment-summary
+
+                    // Display Plot
+                    if (data.trend_plot_url) {
+                        html += `<div class="plot-container"><img src="${data.trend_plot_url}?t=${new Date().getTime()}" alt="Sentiment Trend"></div>`;
+                    } else {
+                        html += '<p>Sentiment trend plot could not be generated.</p>';
+                    }
+
+                    // Display Top Posts
+                    if (data.sentiment.top_posts && data.sentiment.top_posts.length > 0) {
+                        html += '<h4>Top High-Quality Reddit Posts</h4>';
+                        data.sentiment.top_posts.forEach(post => {
+                            const sentimentScore = post.sentiment || 0;
+                            const sentimentClass = sentimentScore > 0.05 ? 'positive' : (sentimentScore < -0.05 ? 'negative' : 'neutral');
+                            html += `<div class="post ${sentimentClass}">`;
+                            html += `<div class="post-title"><a href="${post.url}" target="_blank" rel="noopener noreferrer">${post.title}</a></div>`;
+                            html += `<div class="post-meta">`;
+                            // Removed country display here if it was present
+                            html += `Subreddit: r/${post.subreddit} | Posted: ${post.created_utc}`;
+                            html += `<br>Reddit Score: ${post.score} | Quality Score: ${(post.quality_score * 100).toFixed(0)}% | Sentiment: ${(sentimentScore * 100).toFixed(1)}%`;
+                            html += `</div>`;
+                            if (post.text) {
+                                const truncatedText = post.text.length > 300 ? post.text.substring(0, 300) + '...' : post.text;
+                                html += `<div class="post-text">${truncatedText.replace(/\n/g, '<br>')}</div>`;
+                            }
+                            html += '</div>'; // end post
+                        });
+                    } else {
+                        html += '<p>No top posts to display.</p>';
+                    }
+
+                } else if (data.sentiment && data.sentiment.error) {
+                    html += `<p class="error">Sentiment Analysis Error: ${data.sentiment.error}</p>`;
+                } else {
+                    html += '<p class="error">Sentiment analysis data is missing or incomplete.</p>';
+                }
+
+                // Removed Stock Data display section entirely
+
+                html += '</div>'; // end analysis-results
+                resultsDiv.innerHTML = html;
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                resultsDiv.innerHTML = `<div class="error">An error occurred while fetching or processing the data: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>
